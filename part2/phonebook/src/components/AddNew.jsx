@@ -1,5 +1,5 @@
 import { useState } from 'react'
-
+import { create, update } from '../services/phonebook'
 const AddNew = ({persons, setPersons}) => {
     const [newName, setNewName] = useState('')
     const [number, setNumber] = useState('')
@@ -11,16 +11,27 @@ const AddNew = ({persons, setPersons}) => {
     }
     const handleAdd = (e) => {
         e.preventDefault()
-        let isExisted = persons.some(persion => persion.name === newName)
-        if (isExisted) {
-          alert(`${newName} is already added to phonebook`)
-          return;
+        let oldPerson = persons.find(persion => persion.name === newName)
+        if (oldPerson) {
+            const flag = window.confirm(`${oldPerson.name} is already added to phonebook, replacee the old number with a new one?`)
+            if (flag) {
+                update(oldPerson.id, {...oldPerson, number}).then(
+                    data => {
+                        setPersons(persons => persons.map(person => person.id === data.id ? data : person))
+                    }
+                )
+            }
+        } else {
+            create({
+                name: newName,
+                number
+            }).then(data => {
+                setPersons(persons => [...persons, data])
+            }).catch(error => {
+                alert(error)
+            })
         }
-        setPersons(persons => [...persons, {
-            name: newName,
-            number
-        }])
-    
+
     }
     return (
         <>
